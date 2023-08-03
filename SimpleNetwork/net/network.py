@@ -11,13 +11,6 @@ class Network():
 
     def predict(self, input):
         self.Layers[0] = input
-        # for index, node in enumerate(self.Layers[0]):
-        #     for weightindex in range(len(self.Layers[1])):
-        #         self.Layers[1][weightindex] += self.Weights[0][index][weightindex] * node
-        # for index, node in enumerate(self.Layers[1]):
-        #     self.Layers[1][index] = self.sigmoid(self.Layers[1][index])
-
-        
         for layIndex, Layer in enumerate(self.Layers):
             for index, node in enumerate(Layer):
                 if not layIndex == 0:
