@@ -16,7 +16,7 @@ Data = [
 for i in Data:
     print(f'{i} : {N.output(i[0])}')
 
-Error, Weight1, Weight2, Bias = N.learn(Data,1000)
+Error, Weight1, Weight2, Bias = N.learn(Data,100)
 
 for i in Data:
     print(f'{i} : {N.output(i[0])}')
