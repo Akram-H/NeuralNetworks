@@ -12,7 +12,7 @@ class Neuron():
         self.z = 0
         self.y = 0
 
-        self.lr = .01
+        self.lr = .05
 
     def sigmoid(self,x):
         return 1/(1 + math.exp(-x))
@@ -38,15 +38,23 @@ class Neuron():
                 
                 avg_error += (i[1]-self.y)**2
 
-                de = -2*(i[1]-self.y)
-                dw1 = de * self.dsigmoid(self.z) * self.x1
-                dw2 = de * self.dsigmoid(self.z) * self.x2
-                db =  de * self.dsigmoid(self.z)
+                de = i[1]-self.y
+                dw1 = -de * self.dsigmoid(self.z) * self.x1
+                dw2 = -de * self.dsigmoid(self.z) * self.x2
+                db =  -de * self.dsigmoid(self.z)
+
+                dx1 = -de * self.dsigmoid(self.z) * self.w1
+                dx2 = -de * self.dsigmoid(self.z) * self.w2
+
 
                 self.w1 -= dw1 * self.lr
                 self.w2 -= dw2 * self.lr
                 self.b -= db * self.lr
-            
+
+
+
+
+
             Error.append(avg_error/len(Data))
             Weight1.append(self.w1)
             Weight2.append(self.w2)
@@ -55,8 +63,24 @@ class Neuron():
         return Error, Weight1, Weight2, Bias
 
 
-    def output(self, input):
+    def output(self, input, target=1):
         self.x1, self.x2 = input
         self.z = self.x1 * self.w1 + self.x2 * self.w2 + self.b
         self.y = self.sigmoid(self.z)
+
+
+        de = target-self.y
+        dw1 = -de * self.dsigmoid(self.z) * self.x1
+        dw2 = -de * self.dsigmoid(self.z) * self.x2
+        db =  -de * self.dsigmoid(self.z)
+
+        dx1 = de * self.dsigmoid(self.z) * self.w1
+        dx2 = de * self.dsigmoid(self.z) * self.w2
+
+        self.x1 += dx1
+        self.x2 += dx2
+
+        self.z = self.x1 * self.w1 + self.x2 * self.w2 + self.b
+        self.y = self.sigmoid(self.z)
+
         return self.y

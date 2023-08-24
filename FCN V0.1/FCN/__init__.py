@@ -3,7 +3,7 @@ import math
 
 class Network():
     def __init__(self, layers):
-        self.lr = 0.1
+        self.lr = 0.02
         
 
         self.Layers = []
@@ -34,7 +34,15 @@ class Network():
             self.Biases.append(bias)
 
     def sigmoid(self,x):
-        return 1/(1 + math.exp(-x))
+        try:
+            return 1/(1 + math.exp(-x))
+        except OverflowError:
+            if x < 0:
+                return 0
+            else:
+                return 1
+
+
     def dsigmoid(self,x):
         return self.sigmoid(x)*(1-self.sigmoid(x))
 
@@ -56,29 +64,64 @@ class Network():
 
     def learn(self, Data, Epochs=100):
         
-
+        VisualCost = []
+        VisualStep = []
         
 
 
         for e in range(Epochs):
+            c = 0
             for input,target in Data:
                 predicted = self.output(input)
+                
+                Errors = []
 
+                firstLayerError = []
+                for i,y in enumerate(predicted):
+                    firstLayerError.append(target[i]-y)
+                Errors.append(firstLayerError)
+
+                Cost = 0
+                for i in firstLayerError:
+                    Cost += i**2 
+                Cost *= 1/len(firstLayerError)
+                c = Cost
                 for MirrorLayerIndex in range(len(self.Layers)):
                     LayerIndex = len(self.Layers)-MirrorLayerIndex-1
                     Layer = self.Layers[LayerIndex]
-                    errors = []
-                    for i,y in enumerate(predicted):
-                        errors.append(target[i]-y)
+
                     if MirrorLayerIndex == 0:
                         for NodeIndex, Weights in enumerate(self.Weights[LayerIndex-1]):
                             for index,weight in enumerate(Weights):
-                                de = -2*errors[index]
+                                de = -firstLayerError[index]
                                 dy = self.dsigmoid(self.z[LayerIndex][index])
                                 dz = self.Layers[LayerIndex-1][NodeIndex]
                                 self.Weights[LayerIndex-1][NodeIndex][index] -= de * dz * dz *self.lr
                                 
                         for NodeIndex, Node in enumerate(Layer):
-                            de = -2*errors[NodeIndex]
+                            de = -firstLayerError[NodeIndex]
                             dy = self.dsigmoid(self.z[LayerIndex][index])
                             self.Biases[LayerIndex][NodeIndex] -= de * dy * self.lr
+                    else:
+                        if not MirrorLayerIndex+1 == len(self.Layers):
+                            SecondLayerError = []
+                            for NodeIndex, Node in enumerate(Layer):
+                                de = 0
+                                for LastIndex, lastLayerError in enumerate(Errors[MirrorLayerIndex-1]):
+                                    de += lastLayerError * self.dsigmoid(self.z[LayerIndex+1][LastIndex]) * self.Weights[LayerIndex][NodeIndex][LastIndex]
+                                
+
+                                for NodeIndex, Weights in enumerate(self.Weights[LayerIndex-1]):
+                                    for index,weight in enumerate(Weights):
+                                        dy = self.dsigmoid(self.z[LayerIndex][index])
+                                        dz = self.Layers[LayerIndex-1][NodeIndex]
+                                        self.Weights[LayerIndex-1][NodeIndex][index] -= -de * dz * dz *self.lr
+                                for NodeIndex, Node in enumerate(Layer):
+                                    dy = self.dsigmoid(self.z[LayerIndex][index])
+                                    self.Biases[LayerIndex][NodeIndex] -= -de * dy * self.lr
+                                SecondLayerError.append(de)
+                            Errors.append(SecondLayerError)
+            VisualCost.append(c)
+            VisualStep.append(e)
+
+        return VisualCost, VisualStep
